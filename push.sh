@@ -1,6 +1,5 @@
 git init
 git add .
-git commit -m "first commit"
+git commit -m "add google scholar crawler"
 git branch -M main
-git remote add origin git@github.com:Yutong-Feng/GetMyCitations.git
 git push -u origin main
