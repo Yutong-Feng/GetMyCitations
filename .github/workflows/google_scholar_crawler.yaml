@@ -10,11 +10,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Hard safety net: Google Scholar occasionally CAPTCHA-blocks the
+    # runner's IP and the old code would then hang until GitHub's 6-hour
+    # job limit killed it. Fail fast instead.
+    timeout-minutes: 20
     steps:
-    - uses: actions/checkout@v2
-    - name: Install Reqs
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Fetch previous results (used to skip re-fetching unchanged publication authors)
       run: |
-        sudo apt-get install python3-setuptools
+        mkdir -p google_scholar_crawler/results
+        curl -sf "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/google-scholar-stats/gs_data.json" \
+          -o google_scholar_crawler/results/gs_data.json || true
     - name: Run
       run: |
         cd ./google_scholar_crawler
@@ -25,7 +34,8 @@ jobs:
         git config --global user.name "Yutong-Feng"
         git config --global user.email "847395906@qq.com"
         git add *.json
-        git commit -m "Updated Citation Data"
+        git diff --staged --quiet || git commit -m "Updated Citation Data"
         git push "https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" HEAD:google-scholar-stats --force
       env:
         GOOGLE_SCHOLAR_ID: ${{ secrets.GOOGLE_SCHOLAR_ID }}
+        SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
