@@ -47,7 +47,11 @@ def setup_proxy() -> None:
         return
     try:
         pg = ProxyGenerator()
-        if pg.ScraperAPI(scraper_api_key):
+        # premium=True routes through ScraperAPI's higher-trust IP pool.
+        # Google Scholar's bot detection blocks ScraperAPI's default
+        # (non-premium) IPs almost as often as it blocks GitHub Actions
+        # directly, so the default mode alone doesn't help much.
+        if pg.ScraperAPI(scraper_api_key, premium=True):
             scholarly.use_proxy(pg)
             print("Using ScraperAPI proxy.")
             return
